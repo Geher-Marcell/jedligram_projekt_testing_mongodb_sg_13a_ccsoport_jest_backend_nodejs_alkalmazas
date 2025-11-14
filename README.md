@@ -1,0 +1,1 @@
+# jedligram_projekt_testing_mongodb_sg_13a_ccsoport_jest_backend_nodejs_alkalmazas
