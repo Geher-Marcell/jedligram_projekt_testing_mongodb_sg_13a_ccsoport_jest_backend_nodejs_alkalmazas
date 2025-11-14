@@ -1,0 +1,24 @@
+{
+  "name": "jedligram_projekt_testing_mongodb_sg_13a_ccsoport_jest_backend_nodejs_alkalmazas",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Geher-Marcell/jedligram_projekt_testing_mongodb_sg_13a_ccsoport_jest_backend_nodejs_alkalmazas.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Geher-Marcell/jedligram_projekt_testing_mongodb_sg_13a_ccsoport_jest_backend_nodejs_alkalmazas/issues"
+  },
+  "homepage": "https://github.com/Geher-Marcell/jedligram_projekt_testing_mongodb_sg_13a_ccsoport_jest_backend_nodejs_alkalmazas#readme",
+  "dependencies": {
+    "express": "^5.1.0",
+    "jest": "^30.2.0",
+    "mongodb": "^7.0.0"
+  }
+}
