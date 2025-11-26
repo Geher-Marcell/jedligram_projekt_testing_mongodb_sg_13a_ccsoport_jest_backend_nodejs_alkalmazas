@@ -4,11 +4,40 @@ const httpMocks = require("node-mocks-http");
 
 jest.mock("../models/User");
 
+// válzozók amik több tesztben is használva vannak
+const mockUser = { _id: 1, name: "John Doe", email: "john@example.com" };
+const mockUsers = [mockUser];
+const validNewUser = {
+	name: "Jane Doe",
+	email: "jane@example.com",
+	phone: "1234567890",
+	password: "password123",
+};
+const savedNewUser = { ...validNewUser, _id: 2 };
+const updatedUserData = {
+	name: "John Updated",
+	email: "john.updated@example.com",
+	phone: undefined,
+	password: undefined,
+};
+const invalidEmail = "invalid-email";
+const validId = "1";
+const invalidId = "invalid";
+const nonExistentId = "999";
+const successDeleteMessage = { message: "User deleted successfully" };
+const errorUserNotFound = "User not found";
+const errorInvalidIdFormat = "Invalid user ID format. Must be a number.";
+const errorEmailExists = "An account with this email already exists.";
+
 let req, res, next;
 beforeEach(() => {
 	req = httpMocks.createRequest();
 	res = httpMocks.createResponse();
 	next = jest.fn();
+});
+
+afterEach(() => {
+	jest.clearAllMocks();
 });
 
 describe("UserController tesztelés", () => {
@@ -18,9 +47,6 @@ describe("UserController tesztelés", () => {
 		});
 
 		it("meg kell hívnia a User.find függvényt és vissza kell adnia a felhasználókat", async () => {
-			const mockUsers = [
-				{ _id: 1, name: "John Doe", email: "john@example.com" },
-			];
 			User.find.mockResolvedValue(mockUsers);
 
 			await UserController.getAllUsers(req, res, next);
@@ -44,22 +70,15 @@ describe("UserController tesztelés", () => {
 		});
 
 		it("meg kell hívnia a User.prototype.save függvényt és vissza kell adnia az új felhasználót", async () => {
-			const newUser = {
-				name: "Jane Doe",
-				email: "jane@example.com",
-				phone: "1234567890",
-				password: "password123",
-			};
-			const savedUser = { ...newUser, _id: 2 };
-			req.body = newUser;
+			req.body = validNewUser;
 			User.find.mockResolvedValue([]);
-			User.prototype.save = jest.fn().mockResolvedValue(savedUser);
+			User.prototype.save = jest.fn().mockResolvedValue(savedNewUser);
 
 			await UserController.createUser(req, res, next);
 
 			expect(User.prototype.save).toHaveBeenCalled();
 			expect(res.statusCode).toBe(201);
-			expect(res._getJSONData()).toEqual(savedUser);
+			expect(res._getJSONData()).toEqual(savedNewUser);
 		});
 
 		it("hibát kell visszaadnia, ha nincs paraméter", async () => {
@@ -70,28 +89,43 @@ describe("UserController tesztelés", () => {
 		});
 
 		it("hibát kell visszaadnia, ha csak egy szöveges paraméter van", async () => {
-			req.body = "invalid";
+			req.body = invalidId;
 			await UserController.createUser(req, res, next);
 			expect(res.statusCode).toBe(400);
 			expect(res._getJSONData()).toHaveProperty("error");
 		});
 
 		it("a megfelelő értéket kell visszaadnia, ha a várt paraméterekkel hívják meg", async () => {
-			const newUser = {
-				name: "Jane Doe",
-				email: "jane@example.com",
-				phone: "1234567890",
-				password: "password123",
-			};
-			const savedUser = { ...newUser, _id: 2 };
-			req.body = newUser;
+			req.body = validNewUser;
 			User.find.mockResolvedValue([]);
-			User.prototype.save = jest.fn().mockResolvedValue(savedUser);
+			User.prototype.save = jest.fn().mockResolvedValue(savedNewUser);
 
 			await UserController.createUser(req, res, next);
 
 			expect(res.statusCode).toBe(201);
-			expect(res._getJSONData()).toEqual(savedUser);
+			expect(res._getJSONData()).toEqual(savedNewUser);
+		});
+
+		it("hibát kell visszaadnia, ha hiányoznak a mezők", async () => {
+			req.body = { email: validNewUser.email };
+			await UserController.createUser(req, res, next);
+			expect(res.statusCode).toBe(400);
+			expect(res._getJSONData()).toHaveProperty("error");
+		});
+
+		it("hibát kell visszaadnia, ha az email már létezik", async () => {
+			req.body = validNewUser;
+			User.findOne.mockResolvedValue({ email: validNewUser.email });
+			await UserController.createUser(req, res, next);
+			expect(res.statusCode).toBe(409);
+			expect(res._getJSONData()).toHaveProperty("error", errorEmailExists);
+		});
+
+		it("hibát kell visszaadnia, ha az email formátuma érvénytelen", async () => {
+			req.body = { ...validNewUser, email: invalidEmail };
+			await UserController.createUser(req, res, next);
+			expect(res.statusCode).toBe(400);
+			expect(res._getJSONData()).toHaveProperty("error");
 		});
 	});
 
@@ -101,8 +135,7 @@ describe("UserController tesztelés", () => {
 		});
 
 		it("meg kell hívnia a User.findOne függvényt és vissza kell adnia a felhasználót", async () => {
-			const mockUser = { _id: 1, name: "John Doe", email: "john@example.com" };
-			req.params.id = "1";
+			req.params.id = validId;
 			User.findOne.mockResolvedValue(mockUser);
 
 			await UserController.getUserById(req, res, next);
@@ -120,21 +153,35 @@ describe("UserController tesztelés", () => {
 		});
 
 		it("hibát kell visszaadnia, ha csak egy szöveges paraméter van", async () => {
-			req.params.id = "invalid";
+			req.params.id = invalidId;
 			await UserController.getUserById(req, res, next);
 			expect(res.statusCode).toBe(400);
 			expect(res._getJSONData()).toHaveProperty("error");
 		});
 
 		it("a megfelelő értéket kell visszaadnia, ha a várt paraméterekkel hívják meg", async () => {
-			const mockUser = { _id: 1, name: "John Doe", email: "john@example.com" };
-			req.params.id = "1";
+			req.params.id = validId;
 			User.findOne.mockResolvedValue(mockUser);
 
 			await UserController.getUserById(req, res, next);
 
 			expect(res.statusCode).toBe(200);
 			expect(res._getJSONData()).toEqual(mockUser);
+		});
+
+		it("hibát kell visszaadnia, ha a felhasználó nem létezik", async () => {
+			req.params.id = nonExistentId;
+			User.findOne.mockResolvedValue(null);
+			await UserController.getUserById(req, res, next);
+			expect(res.statusCode).toBe(404);
+			expect(res._getJSONData()).toHaveProperty("error", errorUserNotFound);
+		});
+
+		it("hibát kell visszaadnia, ha az ID formátuma érvénytelen", async () => {
+			req.params.id = "invalid-id";
+			await UserController.getUserById(req, res, next);
+			expect(res.statusCode).toBe(400);
+			expect(res._getJSONData()).toHaveProperty("error", errorInvalidIdFormat);
 		});
 	});
 
@@ -144,16 +191,14 @@ describe("UserController tesztelés", () => {
 		});
 
 		it("meg kell hívnia a User.findOneAndDelete függvényt és vissza kell adnia a sikeres üzenetet", async () => {
-			req.params.id = "1";
+			req.params.id = validId;
 			User.findOneAndDelete.mockResolvedValue({ _id: 1 });
 
 			await UserController.deleteUser(req, res, next);
 
 			expect(User.findOneAndDelete).toHaveBeenCalledWith({ _id: 1 });
 			expect(res.statusCode).toBe(200);
-			expect(res._getJSONData()).toEqual({
-				message: "User deleted successfully",
-			});
+			expect(res._getJSONData()).toEqual(successDeleteMessage);
 		});
 
 		it("hibát kell visszaadnia, ha nincs paraméter", async () => {
@@ -164,22 +209,28 @@ describe("UserController tesztelés", () => {
 		});
 
 		it("hibát kell visszaadnia, ha csak egy szöveges paraméter van", async () => {
-			req.params.id = "invalid";
+			req.params.id = invalidId;
 			await UserController.deleteUser(req, res, next);
 			expect(res.statusCode).toBe(400);
 			expect(res._getJSONData()).toHaveProperty("error");
 		});
 
 		it("a megfelelő értéket kell visszaadnia, ha a várt paraméterekkel hívják meg", async () => {
-			req.params.id = "1";
+			req.params.id = validId;
 			User.findOneAndDelete.mockResolvedValue({ _id: 1 });
 
 			await UserController.deleteUser(req, res, next);
 
 			expect(res.statusCode).toBe(200);
-			expect(res._getJSONData()).toEqual({
-				message: "User deleted successfully",
-			});
+			expect(res._getJSONData()).toEqual(successDeleteMessage);
+		});
+
+		it("hibát kell visszaadnia, ha a felhasználó nem létezik", async () => {
+			req.params.id = nonExistentId;
+			User.findOneAndDelete.mockResolvedValue(null);
+			await UserController.deleteUser(req, res, next);
+			expect(res.statusCode).toBe(404);
+			expect(res._getJSONData()).toHaveProperty("error", errorUserNotFound);
 		});
 	});
 
@@ -189,25 +240,19 @@ describe("UserController tesztelés", () => {
 		});
 
 		it("meg kell hívnia a User.findOneAndUpdate függvényt és vissza kell adnia a frissített felhasználót", async () => {
-			const updatedUser = {
-				name: "John Updated",
-				email: "john.updated@example.com",
-				phone: undefined,
-				password: undefined,
-			};
-			req.params.id = "1";
-			req.body = updatedUser;
-			User.findOneAndUpdate.mockResolvedValue({ _id: 1, ...updatedUser });
+			req.params.id = validId;
+			req.body = updatedUserData;
+			User.findOneAndUpdate.mockResolvedValue({ _id: 1, ...updatedUserData });
 
 			await UserController.updateUser(req, res, next);
 
 			expect(User.findOneAndUpdate).toHaveBeenCalledWith(
 				{ _id: 1 },
-				updatedUser,
+				updatedUserData,
 				{ new: true, runValidators: true }
 			);
 			expect(res.statusCode).toBe(200);
-			expect(res._getJSONData()).toEqual({ _id: 1, ...updatedUser });
+			expect(res._getJSONData()).toEqual({ _id: 1, ...updatedUserData });
 		});
 
 		it("hibát kell visszaadnia, ha nincs paraméter", async () => {
@@ -219,28 +264,39 @@ describe("UserController tesztelés", () => {
 		});
 
 		it("hibát kell visszaadnia, ha csak egy szöveges paraméter van", async () => {
-			req.params.id = "1";
-			req.body = "invalid";
+			req.params.id = validId;
+			req.body = invalidId;
 			await UserController.updateUser(req, res, next);
 			expect(res.statusCode).toBe(400);
 			expect(res._getJSONData()).toHaveProperty("error");
 		});
 
 		it("a megfelelő értéket kell visszaadnia, ha a várt paraméterekkel hívják meg", async () => {
-			const updatedUser = {
-				name: "John Updated",
-				email: "john.updated@example.com",
-				phone: undefined,
-				password: undefined,
-			};
-			req.params.id = "1";
-			req.body = updatedUser;
-			User.findOneAndUpdate.mockResolvedValue({ _id: 1, ...updatedUser });
+			req.params.id = validId;
+			req.body = updatedUserData;
+			User.findOneAndUpdate.mockResolvedValue({ _id: 1, ...updatedUserData });
 
 			await UserController.updateUser(req, res, next);
 
 			expect(res.statusCode).toBe(200);
-			expect(res._getJSONData()).toEqual({ _id: 1, ...updatedUser });
+			expect(res._getJSONData()).toEqual({ _id: 1, ...updatedUserData });
+		});
+
+		it("hibát kell visszaadnia, ha részleges mezőkkel hívják meg", async () => {
+			req.params.id = validId;
+			req.body = { name: "John Updated" };
+			User.findOneAndUpdate.mockResolvedValue(null);
+			await UserController.updateUser(req, res, next);
+			expect(res.statusCode).toBe(404);
+			expect(res._getJSONData()).toHaveProperty("error", errorUserNotFound);
+		});
+
+		it("hibát kell visszaadnia, ha az email formátuma érvénytelen", async () => {
+			req.params.id = validId;
+			req.body = { ...validNewUser, email: invalidEmail };
+			await UserController.updateUser(req, res, next);
+			expect(res.statusCode).toBe(400);
+			expect(res._getJSONData()).toHaveProperty("error");
 		});
 	});
 });

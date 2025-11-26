@@ -28,6 +28,20 @@ exports.createUser = async (req, res) => {
 			});
 		}
 
+		// Validate email format
+		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+		if (!emailRegex.test(email)) {
+			return res.status(400).json({ error: "Invalid email format." });
+		}
+
+		// Check for duplicate email
+		const existingUser = await User.findOne({ email });
+		if (existingUser) {
+			return res
+				.status(409)
+				.json({ error: "An account with this email already exists." });
+		}
+
 		const allUsers = await User.find({}, "_id");
 		let nextId = 1;
 
@@ -44,11 +58,6 @@ exports.createUser = async (req, res) => {
 		res.status(201).json(savedUser);
 	} catch (error) {
 		console.error("Error creating user:", error);
-		if (error.code === 11000) {
-			return res
-				.status(409)
-				.json({ error: "An account with this email already exists." });
-		}
 		res
 			.status(500)
 			.json({ error: "An error occurred while creating the user." });
@@ -127,6 +136,14 @@ exports.updateUser = async (req, res) => {
 			return res
 				.status(400)
 				.json({ error: "Invalid user ID format. Must be a number." });
+		}
+
+		// Validate email format if provided
+		if (email) {
+			const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+			if (!emailRegex.test(email)) {
+				return res.status(400).json({ error: "Invalid email format." });
+			}
 		}
 
 		// Exclude `_id` from the update object
