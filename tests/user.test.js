@@ -42,10 +42,13 @@ afterEach(() => {
 
 describe("UserController tesztelés", () => {
 	describe("getAllUsers", () => {
+		// Tests for the getAllUsers function
+		// This test ensures the function exists and is callable
 		it("rendelkeznie kell egy getAllUsers függvénnyel", () => {
 			expect(typeof UserController.getAllUsers).toBe("function");
 		});
 
+		// This test verifies that getAllUsers fetches all users and returns them
 		it("meg kell hívnia a User.find függvényt és vissza kell adnia a felhasználókat", async () => {
 			User.find.mockResolvedValue(mockUsers);
 
@@ -56,6 +59,7 @@ describe("UserController tesztelés", () => {
 			expect(res._getJSONData()).toEqual(mockUsers);
 		});
 
+		// This test checks error handling when no parameters are provided
 		it("hibát kell visszaadnia, ha nincs paraméter", async () => {
 			req = undefined;
 			await UserController.getAllUsers(req, res, next);
@@ -65,10 +69,13 @@ describe("UserController tesztelés", () => {
 	});
 
 	describe("createUser", () => {
+		// Tests for the createUser function
+		// This test ensures the function exists and is callable
 		it("rendelkeznie kell egy createUser függvénnyel", () => {
 			expect(typeof UserController.createUser).toBe("function");
 		});
 
+		// This test verifies that createUser saves a new user and returns it
 		it("meg kell hívnia a User.prototype.save függvényt és vissza kell adnia az új felhasználót", async () => {
 			req.body = validNewUser;
 			User.find.mockResolvedValue([]);
@@ -76,11 +83,12 @@ describe("UserController tesztelés", () => {
 
 			await UserController.createUser(req, res, next);
 
-			expect(User.prototype.save).toHaveBeenCalled();
+			expect(User.prototype.save).toHaveBeenCalled(); //User.prototype.save ami egy függvény ami elmenti az új felhasználót az adatbázisba
 			expect(res.statusCode).toBe(201);
 			expect(res._getJSONData()).toEqual(savedNewUser);
 		});
 
+		// This test checks error handling when no body is provided
 		it("hibát kell visszaadnia, ha nincs paraméter", async () => {
 			req.body = undefined;
 			await UserController.createUser(req, res, next);
@@ -88,6 +96,7 @@ describe("UserController tesztelés", () => {
 			expect(res._getJSONData()).toHaveProperty("error");
 		});
 
+		// This test checks error handling when an invalid parameter is provided
 		it("hibát kell visszaadnia, ha csak egy szöveges paraméter van", async () => {
 			req.body = invalidId;
 			await UserController.createUser(req, res, next);
@@ -95,6 +104,7 @@ describe("UserController tesztelés", () => {
 			expect(res._getJSONData()).toHaveProperty("error");
 		});
 
+		// This test checks that the correct value is returned when called with the expected parameters
 		it("a megfelelő értéket kell visszaadnia, ha a várt paraméterekkel hívják meg", async () => {
 			req.body = validNewUser;
 			User.find.mockResolvedValue([]);
@@ -106,6 +116,7 @@ describe("UserController tesztelés", () => {
 			expect(res._getJSONData()).toEqual(savedNewUser);
 		});
 
+		// This test checks error handling when required fields are missing
 		it("hibát kell visszaadnia, ha hiányoznak a mezők", async () => {
 			req.body = { email: validNewUser.email };
 			await UserController.createUser(req, res, next);
@@ -113,6 +124,7 @@ describe("UserController tesztelés", () => {
 			expect(res._getJSONData()).toHaveProperty("error");
 		});
 
+		// This test checks error handling when the email already exists
 		it("hibát kell visszaadnia, ha az email már létezik", async () => {
 			req.body = validNewUser;
 			User.findOne.mockResolvedValue({ email: validNewUser.email });
@@ -121,6 +133,7 @@ describe("UserController tesztelés", () => {
 			expect(res._getJSONData()).toHaveProperty("error", errorEmailExists);
 		});
 
+		// This test checks error handling when the email format is invalid
 		it("hibát kell visszaadnia, ha az email formátuma érvénytelen", async () => {
 			req.body = { ...validNewUser, email: invalidEmail };
 			await UserController.createUser(req, res, next);
@@ -130,10 +143,13 @@ describe("UserController tesztelés", () => {
 	});
 
 	describe("getUserById", () => {
+		// Tests for the getUserById function
+		// This test ensures the function exists and is callable
 		it("rendelkeznie kell egy getUserById függvénnyel", () => {
 			expect(typeof UserController.getUserById).toBe("function");
 		});
 
+		// This test verifies that getUserById fetches a user by ID and returns it
 		it("meg kell hívnia a User.findOne függvényt és vissza kell adnia a felhasználót", async () => {
 			req.params.id = validId;
 			User.findOne.mockResolvedValue(mockUser);
@@ -145,6 +161,7 @@ describe("UserController tesztelés", () => {
 			expect(res._getJSONData()).toEqual(mockUser);
 		});
 
+		// This test checks error handling when no ID parameter is provided
 		it("hibát kell visszaadnia, ha nincs paraméter", async () => {
 			req.params.id = undefined;
 			await UserController.getUserById(req, res, next);
@@ -152,6 +169,7 @@ describe("UserController tesztelés", () => {
 			expect(res._getJSONData()).toHaveProperty("error");
 		});
 
+		// This test checks error handling when an invalid ID parameter is provided
 		it("hibát kell visszaadnia, ha csak egy szöveges paraméter van", async () => {
 			req.params.id = invalidId;
 			await UserController.getUserById(req, res, next);
@@ -159,6 +177,7 @@ describe("UserController tesztelés", () => {
 			expect(res._getJSONData()).toHaveProperty("error");
 		});
 
+		// This test checks that the correct value is returned when called with the expected ID parameter
 		it("a megfelelő értéket kell visszaadnia, ha a várt paraméterekkel hívják meg", async () => {
 			req.params.id = validId;
 			User.findOne.mockResolvedValue(mockUser);
@@ -169,6 +188,7 @@ describe("UserController tesztelés", () => {
 			expect(res._getJSONData()).toEqual(mockUser);
 		});
 
+		// This test checks error handling when the user does not exist
 		it("hibát kell visszaadnia, ha a felhasználó nem létezik", async () => {
 			req.params.id = nonExistentId;
 			User.findOne.mockResolvedValue(null);
@@ -177,6 +197,7 @@ describe("UserController tesztelés", () => {
 			expect(res._getJSONData()).toHaveProperty("error", errorUserNotFound);
 		});
 
+		// This test checks error handling when the ID format is invalid
 		it("hibát kell visszaadnia, ha az ID formátuma érvénytelen", async () => {
 			req.params.id = "invalid-id";
 			await UserController.getUserById(req, res, next);
@@ -186,10 +207,13 @@ describe("UserController tesztelés", () => {
 	});
 
 	describe("deleteUser", () => {
+		// Tests for the deleteUser function
+		// This test ensures the function exists and is callable
 		it("rendelkeznie kell egy deleteUser függvénnyel", () => {
 			expect(typeof UserController.deleteUser).toBe("function");
 		});
 
+		// This test verifies that deleteUser deletes a user and returns a success message
 		it("meg kell hívnia a User.findOneAndDelete függvényt és vissza kell adnia a sikeres üzenetet", async () => {
 			req.params.id = validId;
 			User.findOneAndDelete.mockResolvedValue({ _id: 1 });
@@ -201,6 +225,7 @@ describe("UserController tesztelés", () => {
 			expect(res._getJSONData()).toEqual(successDeleteMessage);
 		});
 
+		// This test checks error handling when no ID parameter is provided
 		it("hibát kell visszaadnia, ha nincs paraméter", async () => {
 			req.params.id = undefined;
 			await UserController.deleteUser(req, res, next);
@@ -208,6 +233,7 @@ describe("UserController tesztelés", () => {
 			expect(res._getJSONData()).toHaveProperty("error");
 		});
 
+		// This test checks error handling when an invalid ID parameter is provided
 		it("hibát kell visszaadnia, ha csak egy szöveges paraméter van", async () => {
 			req.params.id = invalidId;
 			await UserController.deleteUser(req, res, next);
@@ -215,6 +241,7 @@ describe("UserController tesztelés", () => {
 			expect(res._getJSONData()).toHaveProperty("error");
 		});
 
+		// This test checks that the correct value is returned when called with the expected ID parameter
 		it("a megfelelő értéket kell visszaadnia, ha a várt paraméterekkel hívják meg", async () => {
 			req.params.id = validId;
 			User.findOneAndDelete.mockResolvedValue({ _id: 1 });
@@ -225,6 +252,7 @@ describe("UserController tesztelés", () => {
 			expect(res._getJSONData()).toEqual(successDeleteMessage);
 		});
 
+		// This test checks error handling when the user does not exist
 		it("hibát kell visszaadnia, ha a felhasználó nem létezik", async () => {
 			req.params.id = nonExistentId;
 			User.findOneAndDelete.mockResolvedValue(null);
@@ -235,10 +263,13 @@ describe("UserController tesztelés", () => {
 	});
 
 	describe("updateUser", () => {
+		// Tests for the updateUser function
+		// This test ensures the function exists and is callable
 		it("rendelkeznie kell egy updateUser függvénnyel", () => {
 			expect(typeof UserController.updateUser).toBe("function");
 		});
 
+		// This test verifies that updateUser updates a user and returns the updated user
 		it("meg kell hívnia a User.findOneAndUpdate függvényt és vissza kell adnia a frissített felhasználót", async () => {
 			req.params.id = validId;
 			req.body = updatedUserData;
@@ -255,6 +286,7 @@ describe("UserController tesztelés", () => {
 			expect(res._getJSONData()).toEqual({ _id: 1, ...updatedUserData });
 		});
 
+		// This test checks error handling when no parameters are provided
 		it("hibát kell visszaadnia, ha nincs paraméter", async () => {
 			req.params.id = undefined;
 			req.body = undefined;
@@ -263,6 +295,7 @@ describe("UserController tesztelés", () => {
 			expect(res._getJSONData()).toHaveProperty("error");
 		});
 
+		// This test checks error handling when an invalid parameter is provided
 		it("hibát kell visszaadnia, ha csak egy szöveges paraméter van", async () => {
 			req.params.id = validId;
 			req.body = invalidId;
@@ -271,6 +304,7 @@ describe("UserController tesztelés", () => {
 			expect(res._getJSONData()).toHaveProperty("error");
 		});
 
+		// This test checks that the correct value is returned when called with the expected parameters
 		it("a megfelelő értéket kell visszaadnia, ha a várt paraméterekkel hívják meg", async () => {
 			req.params.id = validId;
 			req.body = updatedUserData;
@@ -282,6 +316,7 @@ describe("UserController tesztelés", () => {
 			expect(res._getJSONData()).toEqual({ _id: 1, ...updatedUserData });
 		});
 
+		// This test checks error handling when called with partial fields
 		it("hibát kell visszaadnia, ha részleges mezőkkel hívják meg", async () => {
 			req.params.id = validId;
 			req.body = { name: "John Updated" };
@@ -291,6 +326,7 @@ describe("UserController tesztelés", () => {
 			expect(res._getJSONData()).toHaveProperty("error", errorUserNotFound);
 		});
 
+		// This test checks error handling when the email format is invalid
 		it("hibát kell visszaadnia, ha az email formátuma érvénytelen", async () => {
 			req.params.id = validId;
 			req.body = { ...validNewUser, email: invalidEmail };
