@@ -39,3 +39,4 @@ app.post('/users', userController.createUser);
 app.get('/users/:id', userController.getUserById);
 app.delete('/users/:id', userController.deleteUser);
 app.put('/users/:id', userController.updateUser);
+app.get('/users/:id/posts', userController.getPostsByUserId);

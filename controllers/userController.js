@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const Post = require("../models/Post");
 
 exports.getAllUsers = async (req, res) => {
 	try {
@@ -164,5 +165,37 @@ exports.updateUser = async (req, res) => {
 		res
 			.status(500)
 			.json({ error: "An error occurred while updating the user." });
+	}
+};
+
+exports.getPostsByUserId = async (req, res) => {
+	try {
+		if (!req || !req.params) {
+			return res.status(400).json({ error: "Request parameters are missing." });
+		}
+
+		const { id } = req.params;
+
+		const userId = Number(id);
+		if (isNaN(userId)) {
+			return res
+				.status(400)
+				.json({ error: "Invalid user ID format. Must be a number." });
+		}
+
+		const user = await User.findOne({ _id: userId });
+		if (!user) {
+			return res.status(404).json({ error: "User not found" });
+		}
+
+		const posts = await Post.find({ user_id: userId });
+
+		res.status(200).json(posts);
+
+	} catch (error) {
+		console.error("Error fetching posts for user:", error);
+		res
+			.status(500)
+			.json({ error: "An error occurred while fetching the user's posts." });
 	}
 };
