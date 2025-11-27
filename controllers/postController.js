@@ -100,3 +100,30 @@ exports.updatePost = async (req, res) => {
     res.status(500).json({ error: 'An error occurred while updating the post.' });
   }
 };
+
+exports.likePost = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const postId = Number(id);
+    if (isNaN(postId)) {
+      return res.status(400).json({ error: 'Invalid post ID format. Must be a number.' });
+    }
+
+    const updatedPost = await Post.findOneAndUpdate(
+      { _id: postId },
+      { $inc: { likeCount: 1 } },
+      { new: true } 
+    );
+
+    if (!updatedPost) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+
+    res.status(200).json(updatedPost);
+
+  } catch (error) {
+    console.error('Error liking post:', error);
+    res.status(500).json({ error: 'An error occurred while liking the post.' });
+  }
+};

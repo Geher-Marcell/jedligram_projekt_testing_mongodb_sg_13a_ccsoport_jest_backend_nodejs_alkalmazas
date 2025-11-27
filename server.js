@@ -33,6 +33,7 @@ app.post('/posts', postController.createPost);
 app.get('/posts/:id', postController.getPostById);
 app.delete('/posts/:id', postController.deletePost);
 app.put('/posts/:id', postController.updatePost);
+app.post('/posts/:id/like', postController.likePost);
 
 app.get('/users', userController.getAllUsers);
 app.post('/users', userController.createUser);
