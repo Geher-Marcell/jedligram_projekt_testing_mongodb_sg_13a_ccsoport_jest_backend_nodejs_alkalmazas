@@ -1,8 +1,10 @@
 const UserController = require("../controllers/userController");
 const User = require("../models/User");
 const httpMocks = require("node-mocks-http");
+const Post = require("../models/Post");
 
 jest.mock("../models/User");
+jest.mock("../models/Post");
 
 // válzozók amik több tesztben is használva vannak
 const mockUser = { _id: 1, name: "John Doe", email: "john@example.com" };
@@ -335,4 +337,64 @@ describe("UserController tesztelés", () => {
 			expect(res._getJSONData()).toHaveProperty("error");
 		});
 	});
+
+
+	 describe("getPostsByUserId", () => {
+	 	const mockUserPosts = [
+	 		{ _id: 101, user_id: 1, content: "First post" },
+	 		{ _id: 102, user_id: 1, content: "Second post" },
+	 	];
+
+		it("rendelkeznie kell egy getPostsByUserId függvénnyel", () => {
+			expect(typeof UserController.getPostsByUserId).toBe("function");
+		});
+
+		it("vissza kell adnia egy felhasználó összes posztját (200)", async () => {
+			req.params.id = validId; // "1"
+			User.findOne.mockResolvedValue(mockUser); 
+			Post.find.mockResolvedValue(mockUserPosts);
+
+			await UserController.getPostsByUserId(req, res, next);
+
+			expect(User.findOne).toHaveBeenCalledWith({ _id: 1 });
+			expect(Post.find).toHaveBeenCalledWith({ user_id: 1 });
+			expect(res.statusCode).toBe(200);
+			expect(res._getJSONData()).toEqual(mockUserPosts);
+});
+
+	it("vissza kell adnia egy üres tömböt, ha a felhasználónak nincsenek posztjai (200)", async () => {
+		req.params.id = validId; // "1"
+		User.findOne.mockResolvedValue(mockUser);
+		Post.find.mockResolvedValue([]); 
+
+		await UserController.getPostsByUserId(req, res, next);
+
+		expect(User.findOne).toHaveBeenCalledWith({ _id: 1 });
+		expect(Post.find).toHaveBeenCalledWith({ user_id: 1 });
+		expect(res.statusCode).toBe(200);
+		expect(res._getJSONData()).toEqual([]);
+	});
+
+	it("hibát kell visszaadnia, ha a felhasználói ID érvénytelen (400)", async () => {
+		req.params.id = invalidId; 
+		await UserController.getPostsByUserId(req, res, next);
+
+			expect(res.statusCode).toBe(400);
+			expect(res._getJSONData()).toHaveProperty("error", errorInvalidIdFormat);
+			expect(User.findOne).not.toHaveBeenCalled();
+			expect(Post.find).not.toHaveBeenCalled();
+		});
+
+		it("hibát kell visszaadnia, ha a felhasználó nem található (404)", async () => {
+			req.params.id = nonExistentId; 
+			User.findOne.mockResolvedValue(null); 
+
+			await UserController.getPostsByUserId(req, res, next);
+
+			expect(User.findOne).toHaveBeenCalledWith({ _id: 999 });
+			expect(Post.find).not.toHaveBeenCalled(); 
+			expect(res.statusCode).toBe(404);
+			expect(res._getJSONData()).toHaveProperty("error", errorUserNotFound);
+		});
+});
 });
