@@ -168,4 +168,21 @@ describe('Server Controller Tests', () => {
         expect(res.status).toHaveBeenCalledWith(200);
         expect(res.json).toHaveBeenCalledWith({ _id: 1, name: 'Updated User' });
     });
+
+    test('postController.likePost should like a post by ID', async () => {
+        const req = { params: { id: '1' } };
+        const res = {
+            status: jest.fn().mockReturnThis(),
+            json: jest.fn(),
+        };
+
+        jest.spyOn(postController, 'likePost').mockImplementationOnce((req, res) => {
+            res.status(200).json({ _id: 1, content: 'Liked Post', likeCount: 1 });
+        });
+
+        await postController.likePost(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(200);
+        expect(res.json).toHaveBeenCalledWith({ _id: 1, content: 'Liked Post', likeCount: 1 });
+    });
 });
