@@ -21,6 +21,7 @@ npm test
 - **GET /posts/:id**: Poszt lekérdezése az id alapján
 - **DELETE /posts/:id**: Poszt törlése
 - **PUT /posts/:id**: Poszt módosítása 
+- **POST /posts/:id/like** Poszt kedvelése
 - **GET /users**: Összes felhasználó lekérdezése
 - **POST /users**: Új felhasználó létrehozása
 - **GET /users/:id** Felhasználó lekérdezése id  alapján
